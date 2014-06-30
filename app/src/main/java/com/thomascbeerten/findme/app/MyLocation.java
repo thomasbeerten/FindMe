@@ -12,6 +12,8 @@ import android.os.Bundle;
 /**
  * Created by zi04 on 30/06/2014.
  */
+
+//http://stackoverflow.com/questions/3145089/what-is-the-simplest-and-most-robust-way-to-get-the-users-current-location-in-a
 public class MyLocation {
     Timer timer1;
     LocationManager lm;
