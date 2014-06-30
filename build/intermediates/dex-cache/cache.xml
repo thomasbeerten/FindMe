@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<pre-dex-items>
+
+    <item
+        dex="C:\Users\zi04\AndroidStudioProjects\FindMe\app\build\intermediates\pre-dexed\debug\classes-f4d7f3810e038925ef1c9140a7dd71e0caf0c729.jar"
+        jar="C:\Users\zi04\AndroidStudioProjects\FindMe\build\intermediates\exploded-aar\com.google.maps.android\android-maps-utils\0.3.1\classes.jar"
+        jumboMode="false"
+        revision="19.1.0"
+        sha1="0840d832d8a8c4fde01e623f2817332801e6bb49"/>
+    <item
+        dex="C:\Users\zi04\AndroidStudioProjects\FindMe\app\build\intermediates\pre-dexed\debug\support-v4-19.1.0-ba8f97bd18b39aa22881129d821d08128854ea70.jar"
+        jar="C:\Users\zi04\AppData\Local\Android\android-studio\sdk\extras\android\m2repository\com\android\support\support-v4\19.1.0\support-v4-19.1.0.jar"
+        jumboMode="false"
+        revision="19.1.0"
+        sha1="85f201b380937e61a9dce6ca90ccf6872abbfb67"/>
+    <item
+        dex="C:\Users\zi04\AndroidStudioProjects\FindMe\app\build\intermediates\pre-dexed\debug\classes-84199005189be764ff7b751167afdfe0b2ba6581.jar"
+        jar="C:\Users\zi04\AndroidStudioProjects\FindMe\build\intermediates\exploded-aar\com.google.android.gms\play-services\4.3.23\classes.jar"
+        jumboMode="false"
+        revision="19.1.0"
+        sha1="7676c0cb230efa6ac41c47867d372ed5913029d4"/>
+    <item
+        dex="C:\Users\zi04\AndroidStudioProjects\FindMe\app\build\intermediates\pre-dexed\debug\classes-e6a086b89488df6e1177be512423b33fba51dfd3.jar"
+        jar="C:\Users\zi04\AndroidStudioProjects\FindMe\build\intermediates\exploded-aar\com.android.support\appcompat-v7\19.1.0\classes.jar"
+        jumboMode="false"
+        revision="19.1.0"
+        sha1="3499ceba05ca1f6037c6a2fad73df8f636224a28"/>
+
+</pre-dex-items>
