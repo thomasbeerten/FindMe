@@ -1,18 +1,32 @@
 package com.thomascbeerten.findme.app;
 
 import android.app.Activity;
+import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
+import android.location.Location;
 import android.net.Uri;
 import android.provider.ContactsContract;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
+import android.telephony.SmsManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.maps.CameraUpdate;
+import com.google.android.gms.maps.CameraUpdateFactory;
+import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.MarkerOptions;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -21,6 +35,43 @@ public class MainActivity extends ActionBarActivity {
     TextView txtPhoneNumber;
     Button btnFindContact;
     Button btnSendLocation;
+    TextView txtSms;
+    Button btnLocationStuff;
+
+    String SENT = "SMS_SENT";
+    String DELIVERED = "SMS_DELIVERED";
+    PendingIntent sentPI, deliveredPI;
+    BroadcastReceiver smsSentReceiver, smsDeliveredReceiver;
+    IntentFilter intentFilter;
+
+    //map
+    private GoogleMap map;
+
+    private BroadcastReceiver intentReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d("called", "intentreceiver called");
+
+            txtSms.setVisibility(View.VISIBLE);
+            txtSms.setText(intent.getExtras().getString("sms"));
+        }
+    };
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+
+        //---register the receiver---
+        registerReceiver(intentReceiver, intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+
+        //---unregister the receiver---
+        unregisterReceiver(intentReceiver);
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +83,8 @@ public class MainActivity extends ActionBarActivity {
         txtPhoneNumber = (TextView) findViewById(R.id.txtPhoneNumber);
         txtPhoneName = (TextView) findViewById(R.id.txtPhoneName);
         btnSendLocation = (Button) findViewById(R.id.btnSendLocation);
+        txtSms = (TextView) findViewById(R.id.txtSMS);
+        btnLocationStuff = (Button) findViewById(R.id.btnLocationStuff);
 
         //buttoncontact
         btnFindContact.setOnClickListener(new View.OnClickListener() {
@@ -41,6 +94,17 @@ public class MainActivity extends ActionBarActivity {
             }
         });
 
+        //buttonlocationstuff
+        btnLocationStuff.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                LocationStuff();
+            }
+        });
+
+        //---intent to filter for SMS messages received---
+        intentFilter = new IntentFilter();
+        intentFilter.addAction("SMS_RECEIVED_ACTION");
     }
 
     private void pickContact() {
@@ -95,9 +159,10 @@ public class MainActivity extends ActionBarActivity {
         txtPhoneNumber.setVisibility(View.GONE);
         txtPhoneName.setVisibility(View.GONE);
         btnSendLocation.setEnabled(false);
+        txtSms.setVisibility(View.GONE);
     }
 
-    private void ShowContact(String name, String number) {
+    private void ShowContact(String name, final String number) {
         txtPhoneNumber.setVisibility(View.VISIBLE);
         txtPhoneName.setVisibility(View.VISIBLE);
         if (name != null) {
@@ -112,5 +177,36 @@ public class MainActivity extends ActionBarActivity {
             }
         }
         btnSendLocation.setEnabled(true);
+        btnSendLocation.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                //  sendSms(number, "testsms for debugging");
+                sendSms("0473848248", "testsms for debugging");
+            }
+        });
+    }
+
+    private void sendSms(String phoneNumber, String message) {
+        SmsManager sms = SmsManager.getDefault();
+        sms.sendTextMessage(phoneNumber, null, message, null, null);
+    }
+
+    private void LocationStuff() {
+        MyLocation.LocationResult locationResult = new MyLocation.LocationResult() {
+            @Override
+            public void gotLocation(Location location) {
+                TextView textViewLocationStuff = (TextView) findViewById(R.id.textViewLocationStuff);
+                textViewLocationStuff.setText(location.toString());
+
+                final LatLng LOCATION = new LatLng(location.getLatitude(), location.getLongitude());
+                map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
+                map.addMarker(new MarkerOptions().position(LOCATION).title("find me here"));
+                map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                CameraUpdate update = CameraUpdateFactory.newLatLngZoom(LOCATION, 16);
+                map.animateCamera(update);
+            }
+        };
+        MyLocation myLocation = new MyLocation();
+        myLocation.getLocation(this, locationResult);
     }
 }
