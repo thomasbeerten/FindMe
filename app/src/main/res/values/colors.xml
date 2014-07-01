@@ -11,4 +11,9 @@
     <color name="button_end">#9BC4E2</color>
 
     <color name="button_center_pressed">#BFEFFF</color>
+
+    <!--accuracy colors-->
+    <color name="accuracy_low">#FF6666</color>
+    <color name="accuracy_medium">#FFA366</color>
+    <color name="accuracy_high">#66C266</color>
 </resources>

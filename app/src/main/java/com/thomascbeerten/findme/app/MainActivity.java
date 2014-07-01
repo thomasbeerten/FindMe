@@ -1,11 +1,11 @@
 package com.thomascbeerten.findme.app;
 
-import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.location.Location;
 import android.net.Uri;
@@ -14,12 +14,9 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.telephony.SmsManager;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -36,7 +33,11 @@ public class MainActivity extends ActionBarActivity {
     Button btnFindContact;
     Button btnSendLocation;
     TextView txtSms;
-    Button btnLocationStuff;
+    Button btnGrabLocation;
+    Button btnShowTheMap;
+
+    String contactNumber;
+    String contactName;
 
     String SENT = "SMS_SENT";
     String DELIVERED = "SMS_DELIVERED";
@@ -46,12 +47,12 @@ public class MainActivity extends ActionBarActivity {
 
     //map
     private GoogleMap map;
+    String locationInfo;
+    LatLng LOCATION;
 
     private BroadcastReceiver intentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d("called", "intentreceiver called");
-
             txtSms.setVisibility(View.VISIBLE);
             txtSms.setText(intent.getExtras().getString("sms"));
         }
@@ -78,29 +79,77 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        //views initializeren
-        btnFindContact = (Button) findViewById(R.id.btnFindContact);
-        txtPhoneNumber = (TextView) findViewById(R.id.txtPhoneNumber);
-        txtPhoneName = (TextView) findViewById(R.id.txtPhoneName);
-        btnSendLocation = (Button) findViewById(R.id.btnSendLocation);
-        txtSms = (TextView) findViewById(R.id.txtSMS);
-        btnLocationStuff = (Button) findViewById(R.id.btnLocationStuff);
+        //PORTRAIT
+        if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
+            //show actionbar
+            getSupportActionBar().show();
 
-        //buttoncontact
-        btnFindContact.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                pickContact();
+            //views initializeren
+            btnFindContact = (Button) findViewById(R.id.btnFindContact);
+            txtPhoneNumber = (TextView) findViewById(R.id.txtPhoneNumber);
+            txtPhoneName = (TextView) findViewById(R.id.txtPhoneName);
+            btnSendLocation = (Button) findViewById(R.id.btnSendLocation);
+            txtSms = (TextView) findViewById(R.id.txtSMS);
+            btnGrabLocation = (Button) findViewById(R.id.btnGrabLocation);
+
+
+            //onclicklisteners
+            btnFindContact.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    pickContact();
+                }
+            });
+
+            btnGrabLocation.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    LocationStuff();
+                }
+            });
+
+            //naam en nummer invullen
+            if (contactName != null && contactNumber != null) {
+                ShowContact(contactName, contactNumber);
+
+            } else {
+                if (contactName == null) {
+                    Log.d("debuginfo", "showcontact: contactnamenull");
+                }
+                if (contactNumber == null) {
+                    Log.d("debuginfo", "showcontact: contactnumber  null");
+                }
+
             }
-        });
+            //LANDSCAPE
+        } else {
+            //hide actionbar
+            getSupportActionBar().hide();
 
-        //buttonlocationstuff
-        btnLocationStuff.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
+            //views initializeren
+            btnShowTheMap = (Button) findViewById(R.id.btnShowTheMap);
+            //onclicklisteners
+            btnShowTheMap.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    LocationStuff();
+                }
+            });
+        }
+
+        //state
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey("locatie")) {
+                LOCATION = savedInstanceState.getParcelable("locatie");
                 LocationStuff();
             }
-        });
+            if (savedInstanceState.containsKey("contactName")) {
+                contactName = savedInstanceState.getString("contactName");
+            }
+            if (savedInstanceState.containsKey("contactNumber")) {
+                contactNumber = savedInstanceState.getString("contactNumber");
+            }
+        }
 
         //---intent to filter for SMS messages received---
         intentFilter = new IntentFilter();
@@ -140,15 +189,15 @@ public class MainActivity extends ActionBarActivity {
 
                 // Retrieve the phone number from the NUMBER column
                 int columnnumber = cursornumber.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-                String number = cursornumber.getString(columnnumber);
+                contactNumber = cursornumber.getString(columnnumber);
 
                 // Retrieve the phone name from the DISPLAY_NAME column
                 int columnname = cursorname.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
-                String name = cursorname.getString(columnname);
+                contactName = cursorname.getString(columnname);
 
 
                 // Do something with the phone number...
-                ShowContact(name, number);
+                ShowContact(contactName, contactNumber);
             } else {
                 HideContact();
             }
@@ -176,12 +225,18 @@ public class MainActivity extends ActionBarActivity {
                 txtPhoneName.setText("Unknown");
             }
         }
-        btnSendLocation.setEnabled(true);
+        if (LOCATION != null) {
+            btnSendLocation.setEnabled(true);
+        }
         btnSendLocation.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //  sendSms(number, "testsms for debugging");
-                sendSms("0473848248", "testsms for debugging");
+                //send sms, nummer hardcoded
+                String sms = "FINDME location is ";
+                if (LOCATION != null) {
+                    sms = sms + "latitutde: " + LOCATION.latitude + " longitude: " + LOCATION.longitude;
+                }
+                sendSms("0473848248", sms);
             }
         });
     }
@@ -195,18 +250,67 @@ public class MainActivity extends ActionBarActivity {
         MyLocation.LocationResult locationResult = new MyLocation.LocationResult() {
             @Override
             public void gotLocation(Location location) {
-                TextView textViewLocationStuff = (TextView) findViewById(R.id.textViewLocationStuff);
-                textViewLocationStuff.setText(location.toString());
 
-                final LatLng LOCATION = new LatLng(location.getLatitude(), location.getLongitude());
-                map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
-                map.addMarker(new MarkerOptions().position(LOCATION).title("find me here"));
-                map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
-                CameraUpdate update = CameraUpdateFactory.newLatLngZoom(LOCATION, 16);
-                map.animateCamera(update);
+                TextView textViewLocationStuff = (TextView) findViewById(R.id.textViewAccuracy);
+                textViewLocationStuff.setText(String.valueOf("Accuracy in meters: " + location.getAccuracy()));
+                //textview inkleuren naarmate accuracy
+                if (location.getAccuracy() > 1600) {
+                    if (android.os.Build.VERSION.SDK_INT >= 16) {
+                        textViewLocationStuff.setBackground(getResources().getDrawable(R.drawable.custom_textview_lowaccuracy));
+                    } else {
+                        textViewLocationStuff.setBackgroundDrawable(getResources().getDrawable(R.drawable.custom_textview_lowaccuracy));
+                    }
+                } else if (location.getAccuracy() > 61) {
+                    if (android.os.Build.VERSION.SDK_INT >= 16) {
+                        textViewLocationStuff.setBackground(getResources().getDrawable(R.drawable.custom_textview_mediumaccuracy));
+                    } else {
+                        textViewLocationStuff.setBackgroundDrawable(getResources().getDrawable(R.drawable.custom_textview_mediumaccuracy));
+                    }
+                } else if (location.getAccuracy() > 6) {
+                    if (android.os.Build.VERSION.SDK_INT >= 16) {
+                        textViewLocationStuff.setBackground(getResources().getDrawable(R.drawable.custom_textview_highaccuracy));
+                    } else {
+                        textViewLocationStuff.setBackgroundDrawable(getResources().getDrawable(R.drawable.custom_textview_highaccuracy));
+                    }
+                } else {
+                    //is er nog een optie?
+                }
+
+                if (LOCATION == null) {
+                    LOCATION = new LatLng(location.getLatitude(), location.getLongitude());
+                    Log.d("debugging", "LOCATION is null");
+                }
+                if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    getSupportActionBar().hide();
+
+                    map = ((MapFragment) getFragmentManager().findFragmentById(R.id.map)).getMap();
+                    map.addMarker(new MarkerOptions().position(LOCATION).title("find me here"));
+                    map.setMapType(GoogleMap.MAP_TYPE_NORMAL);
+                    CameraUpdate update = CameraUpdateFactory.newLatLngZoom(LOCATION, 16);
+                    map.animateCamera(update);
+                } else {
+                    getSupportActionBar().show();
+
+                    textViewLocationStuff.setText("rotate device to see the map");
+                }
             }
         };
         MyLocation myLocation = new MyLocation();
         myLocation.getLocation(this, locationResult);
     }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (LOCATION != null) {
+            outState.putParcelable("locatie", LOCATION);
+        }
+        if (contactName != null) {
+            outState.putString("contactName", contactName);
+        }
+        if (contactNumber != null) {
+            outState.putString("contactNumber", contactNumber);
+        }
+    }
+
 }

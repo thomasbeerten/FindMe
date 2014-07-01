@@ -38,16 +38,6 @@
         android:visibility="gone" />
 
 
-    <Button
-        android:id="@+id/btnSendLocation"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="6dp"
-        android:background="@drawable/custom_button_selector"
-        android:enabled="false"
-        android:text="Send my location"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
-
     <TextView
         android:id="@+id/txtSMS"
         android:layout_width="match_parent"
@@ -60,12 +50,12 @@
         android:visibility="gone" />
 
     <Button
-        android:id="@+id/btnLocationStuff"
+        android:id="@+id/btnGrabLocation"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="6dp"
         android:background="@drawable/custom_button_selector"
-        android:text="Test Location"
+        android:text="Grab Location"
         android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <ScrollView
@@ -78,7 +68,7 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/textViewLocationStuff"
+                android:id="@+id/textViewAccuracy"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_margin="6dp"
@@ -87,13 +77,18 @@
                 android:text="Name"
                 android:visibility="visible" />
 
-            <fragment
-                android:id="@+id/map"
-                android:name="com.google.android.gms.maps.MapFragment"
+            <Button
+                android:id="@+id/btnSendLocation"
                 android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:layout_below="@+id/header" />
+                android:layout_height="wrap_content"
+                android:layout_margin="6dp"
+                android:background="@drawable/custom_button_selector"
+                android:enabled="false"
+                android:text="Send my location"
+                android:textAppearance="?android:attr/textAppearanceLarge" />
         </LinearLayout>
+
+
     </ScrollView>
 
 </LinearLayout>
