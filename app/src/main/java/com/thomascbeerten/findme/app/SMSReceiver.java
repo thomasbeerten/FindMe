@@ -17,7 +17,7 @@ public class SMSReceiver extends BroadcastReceiver {
         //---get the SMS message passed in---
         Bundle bundle = intent.getExtras();
         SmsMessage[] msgs = null;
-        String str = "SMS from ";
+        String str = "FINDME SMS from ";
         if (bundle != null) {
             //---retrieve the SMS message received---
             Object[] pdus = (Object[]) bundle.get("pdus");
@@ -25,22 +25,33 @@ public class SMSReceiver extends BroadcastReceiver {
             for (int i = 0; i < msgs.length; i++) {
                 msgs[i] = SmsMessage.createFromPdu((byte[]) pdus[i]);
                 if (i == 0) {
-            //---get the sender address/phone number---
+                    //---get the sender address/phone number---
                     str += msgs[i].getOriginatingAddress();
                     str += ": ";
                 }
-            //---get the message body---
+                //---get the message body---
                 str += msgs[i].getMessageBody().toString();
             }
             //---display the new SMS message---
-            Toast.makeText(context, str, Toast.LENGTH_SHORT).show();
+            // Toast.makeText(context, str, Toast.LENGTH_SHORT).show();
             Log.d("SMSReceiver", str);
 
-            //intent naar mainactivity
-            Intent broadcastIntent = new Intent();
-            broadcastIntent.setAction("SMS_RECEIVED_ACTION");
-            broadcastIntent.putExtra("sms", str);
-            context.sendBroadcast(broadcastIntent);
+
+            Log.d("SMS receiver class: substring", str.substring(0, 6));
+
+            //indien inkomende sms > 6 tekens en begint met FINDME, doorsturen naar mainactivity
+            if (str.length() > 6) {
+                if (str.substring(0, 6).equals("FINDME")) {
+                    //SMS intern afhandelen en niet verder broadcasten
+                    this.abortBroadcast();
+                    //intent naar mainactivity
+                    Intent broadcastIntent = new Intent();
+                    broadcastIntent.setAction("SMS_RECEIVED_ACTION");
+                    broadcastIntent.putExtra("sms", str);
+                    context.sendBroadcast(broadcastIntent);
+                }
+            }
+
         }
     }
 }

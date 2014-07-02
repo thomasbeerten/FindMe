@@ -74,7 +74,7 @@
                 android:layout_margin="6dp"
                 android:background="@drawable/custom_textview"
                 android:gravity="center"
-                android:text="Name"
+                android:text="status idle"
                 android:visibility="visible" />
 
             <Button

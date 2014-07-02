@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!--custom textview-->
-    <color name="textview_start">#D3D3D3</color>
-    <color name="textview_center">#D1D1D1</color>
-    <color name="textview_end">#DCDCDC</color>
+    <color name="textview_start">#CCD3D3D3</color>
+    <color name="textview_center">#CCD1D1D1</color>
+    <color name="textview_end">#CCDCDCDC</color>
 
     <!--custom button-->
-    <color name="button_start">#9BC4E2</color>
-    <color name="button_center">#87CEFA</color>
-    <color name="button_end">#9BC4E2</color>
+    <color name="button_start">#CC9BC4E2</color>
+    <color name="button_center">#CC87CEFA</color>
+    <color name="button_end">#CC9BC4E2</color>
 
     <color name="button_center_pressed">#BFEFFF</color>
 

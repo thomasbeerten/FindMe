@@ -7,8 +7,11 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.res.Configuration;
 import android.database.Cursor;
+import android.database.CursorIndexOutOfBoundsException;
 import android.location.Location;
+import android.media.MediaPlayer;
 import android.net.Uri;
+import android.os.Vibrator;
 import android.provider.ContactsContract;
 import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
@@ -17,6 +20,7 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -45,6 +49,9 @@ public class MainActivity extends ActionBarActivity {
     BroadcastReceiver smsSentReceiver, smsDeliveredReceiver;
     IntentFilter intentFilter;
 
+    Vibrator vibrator;
+    MediaPlayer mediaPlayer;
+
     //map
     private GoogleMap map;
     String locationInfo;
@@ -53,8 +60,36 @@ public class MainActivity extends ActionBarActivity {
     private BroadcastReceiver intentReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            txtSms.setVisibility(View.VISIBLE);
-            txtSms.setText(intent.getExtras().getString("sms"));
+            //get SMS from SMSReceiver class & navigate to SMSReceivedActivity
+            String SMS = intent.getExtras().getString("sms");
+            Intent SMSReceivedActivityIntent = new Intent(MainActivity.this, SMSReceivedActivity.class);
+            SMSReceivedActivityIntent.putExtra("SMS", SMS);
+
+            //vibrate & play sound, then start activity
+            vibrator = (Vibrator) context.getSystemService(Context.VIBRATOR_SERVICE);
+            vibrator.vibrate(500);
+            try {
+                mediaPlayer = MediaPlayer.create(getBaseContext(), R.raw.ding);
+
+                Log.d("log mediaplayer", "mediaplayer is not null");
+                mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+                    @Override
+                    public void onCompletion(MediaPlayer mediaPlayer) {
+                        mediaPlayer.release();
+                    }
+                });
+                mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                    @Override
+                    public void onPrepared(MediaPlayer mediaPlayer) {
+                        mediaPlayer.start();
+                    }
+                });
+
+            } catch (Exception e) {
+                Log.d("debug", e.getMessage());
+            }
+
+            startActivity(SMSReceivedActivityIntent);
         }
     };
 
@@ -79,6 +114,20 @@ public class MainActivity extends ActionBarActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //state
+        if (savedInstanceState != null) {
+            if (savedInstanceState.containsKey("locatie")) {
+                LOCATION = savedInstanceState.getParcelable("locatie");
+                LocationStuff();
+            }
+            if (savedInstanceState.containsKey("contactName")) {
+                contactName = savedInstanceState.getString("contactName");
+            }
+            if (savedInstanceState.containsKey("contactNumber")) {
+                contactNumber = savedInstanceState.getString("contactNumber");
+            }
+        }
+
         //PORTRAIT
         if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT) {
             //show actionbar
@@ -100,7 +149,6 @@ public class MainActivity extends ActionBarActivity {
                     pickContact();
                 }
             });
-
             btnGrabLocation.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -108,18 +156,10 @@ public class MainActivity extends ActionBarActivity {
                 }
             });
 
+
             //naam en nummer invullen
             if (contactName != null && contactNumber != null) {
                 ShowContact(contactName, contactNumber);
-
-            } else {
-                if (contactName == null) {
-                    Log.d("debuginfo", "showcontact: contactnamenull");
-                }
-                if (contactNumber == null) {
-                    Log.d("debuginfo", "showcontact: contactnumber  null");
-                }
-
             }
             //LANDSCAPE
         } else {
@@ -137,19 +177,6 @@ public class MainActivity extends ActionBarActivity {
             });
         }
 
-        //state
-        if (savedInstanceState != null) {
-            if (savedInstanceState.containsKey("locatie")) {
-                LOCATION = savedInstanceState.getParcelable("locatie");
-                LocationStuff();
-            }
-            if (savedInstanceState.containsKey("contactName")) {
-                contactName = savedInstanceState.getString("contactName");
-            }
-            if (savedInstanceState.containsKey("contactNumber")) {
-                contactNumber = savedInstanceState.getString("contactNumber");
-            }
-        }
 
         //---intent to filter for SMS messages received---
         intentFilter = new IntentFilter();
@@ -164,6 +191,10 @@ public class MainActivity extends ActionBarActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+
+        Cursor cursornumber = null;
+        Cursor cursorname = null;
+
         // Check which request it is that we're responding to
         if (requestCode == PICK_CONTACT_REQUEST) {
             // Make sure the request was successful
@@ -179,22 +210,26 @@ public class MainActivity extends ActionBarActivity {
                 // CAUTION: The query() method should be called from a separate thread to avoid blocking
                 // your app's UI thread. (For simplicity of the sample, this code doesn't do that.)
                 // Consider using CursorLoader to perform the query.
-                Cursor cursornumber = getContentResolver()
-                        .query(contactUri, projectionnumber, null, null, null);
-                cursornumber.moveToFirst();
+                try {
+                    cursornumber = getContentResolver()
+                            .query(contactUri, projectionnumber, null, null, null);
+                    cursornumber.moveToFirst();
 
-                Cursor cursorname = getContentResolver()
-                        .query(contactUri, projectionname, null, null, null);
-                cursorname.moveToFirst();
+                    cursorname = getContentResolver()
+                            .query(contactUri, projectionname, null, null, null);
+                    cursorname.moveToFirst();
 
-                // Retrieve the phone number from the NUMBER column
-                int columnnumber = cursornumber.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
-                contactNumber = cursornumber.getString(columnnumber);
 
-                // Retrieve the phone name from the DISPLAY_NAME column
-                int columnname = cursorname.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
-                contactName = cursorname.getString(columnname);
+                    // Retrieve the phone number from the NUMBER column
+                    int columnnumber = cursornumber.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER);
+                    contactNumber = cursornumber.getString(columnnumber);
 
+                    // Retrieve the phone name from the DISPLAY_NAME column
+                    int columnname = cursorname.getColumnIndex(ContactsContract.CommonDataKinds.Phone.DISPLAY_NAME);
+                    contactName = cursorname.getString(columnname);
+                } catch (CursorIndexOutOfBoundsException e) {
+                    pickContact();
+                }
 
                 // Do something with the phone number...
                 ShowContact(contactName, contactNumber);
@@ -234,7 +269,7 @@ public class MainActivity extends ActionBarActivity {
                 //send sms, nummer hardcoded
                 String sms = "FINDME location is ";
                 if (LOCATION != null) {
-                    sms = sms + "latitutde: " + LOCATION.latitude + " longitude: " + LOCATION.longitude;
+                    sms = sms + "coordinates" + "*" + LOCATION.latitude + "*" + LOCATION.longitude;
                 }
                 sendSms("0473848248", sms);
             }
@@ -253,6 +288,14 @@ public class MainActivity extends ActionBarActivity {
 
                 TextView textViewLocationStuff = (TextView) findViewById(R.id.textViewAccuracy);
                 textViewLocationStuff.setText(String.valueOf("Accuracy in meters: " + location.getAccuracy()));
+
+                //enable button sendlocation indien in portrait
+                if (btnSendLocation != null) {
+                    if (contactName != null && contactNumber != null) {
+                        btnSendLocation.setEnabled(true);
+                    }
+                }
+
                 //textview inkleuren naarmate accuracy
                 if (location.getAccuracy() > 1600) {
                     if (android.os.Build.VERSION.SDK_INT >= 16) {
@@ -278,7 +321,6 @@ public class MainActivity extends ActionBarActivity {
 
                 if (LOCATION == null) {
                     LOCATION = new LatLng(location.getLatitude(), location.getLongitude());
-                    Log.d("debugging", "LOCATION is null");
                 }
                 if (getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     getSupportActionBar().hide();
@@ -297,8 +339,11 @@ public class MainActivity extends ActionBarActivity {
         };
         MyLocation myLocation = new MyLocation();
         myLocation.getLocation(this, locationResult);
+
+
     }
 
+    //save LOCATION, contactName & contactNumber state
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);

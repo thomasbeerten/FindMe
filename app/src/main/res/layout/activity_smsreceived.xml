@@ -2,29 +2,28 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/backgroundland"
+    android:background="@drawable/backgroundport"
     android:orientation="vertical"
-    tools:context=".MainActivity">
-
-    <Button
-        android:id="@+id/btnShowTheMap"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="6dp"
-        android:background="@drawable/custom_button_selector"
-        android:text="Refresh my location"
-        android:textAppearance="?android:attr/textAppearanceLarge" />
+    tools:context="com.thomascbeerten.findme.app.SMSReceivedActivity">
 
     <TextView
-        android:id="@+id/textViewAccuracy"
+        android:id="@+id/txtNotification"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_margin="6dp"
         android:background="@drawable/custom_textview"
         android:gravity="center"
-        android:text="Accuracy"
-        android:visibility="visible" />
+        android:text="You received a location!"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
 
+    <Button
+        android:id="@+id/btnShowReceivedLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="6dp"
+        android:background="@drawable/custom_button_selector"
+        android:text="Show me!"
+        android:textAppearance="?android:attr/textAppearanceLarge" />
 
     <fragment
         android:id="@+id/map"
@@ -32,5 +31,5 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/header" />
-
 </LinearLayout>
+
